@@ -38,27 +38,26 @@ class OriginEPG():
         self.remove_stale_cache(todaydate)
 
         for fhdhr_id in list(fhdhr_channels.list.keys()):
-            c = fhdhr_channels.list[fhdhr_id].dict
+            chan_obj = fhdhr_channels.list[fhdhr_id]
 
-            if str(c["number"]) not in list(programguide.keys()):
-                programguide[str(c["number"])] = {
-                                                    "callsign": c["callsign"],
-                                                    "name": c["name"],
-                                                    "number": c["number"],
-                                                    "id": c["origin_id"],
-                                                    "thumbnail": c["thumbnail"] or ("/api/images?method=generate&type=channel&message=%s" % (str(c['number']))),
-                                                    "listing": [],
-                                                    }
-            if c["origin_id"] in ["est", "pst", "snick-est", "snick-pst"]:
-                epgname = c["origin_id"]
-                if "pst" in c["origin_id"]:
-                    epgname = c["origin_id"].replace("pst", "est")
+            if str(chan_obj.dict["number"]) not in list(programguide.keys()):
+                programguide[str(chan_obj.dict["number"])] = chan_obj.epgdict
+
+            if chan_obj.dict["origin_id"] in ["est", "pst", "snick-est", "snick-pst"]:
+
+                epgname = chan_obj.dict["origin_id"]
+                if "pst" in chan_obj.dict["origin_id"]:
+                    epgname = chan_obj.dict["origin_id"].replace("pst", "est")
+
                 datestring = str(datetime.date.today())
-                if c["origin_id"] in ["est", "pst"]:
+
+                if chan_obj.dict["origin_id"] in ["est", "pst"]:
                     schedule_name = "Toonami Aftermath"
-                elif c["origin_id"] in ["snick-est", "snick-pst"]:
+                elif chan_obj.dict["origin_id"] in ["snick-est", "snick-pst"]:
                     schedule_name = "Snickelodeon"
+
                 schedulename_quote = urllib.parse.quote("%s EST" % schedule_name)
+
                 epgguide = []
                 for datestring in datestrings:
                     schedule_url = ("%s?scheduleName=%s"
@@ -70,7 +69,7 @@ class OriginEPG():
                         epgguide.extend(curr_epg)
 
                 offset = '+00:00'
-                if "pst" in c["origin_id"]:
+                if "pst" in chan_obj.dict["origin_id"]:
                     offset = '-03:00'
 
                 progindex = 0
@@ -97,7 +96,7 @@ class OriginEPG():
                         try:
                             thumbnail = program_dict["info"]["image"]
                         except KeyError:
-                            thumbnail = ("/api/images?method=generate&type=content&message=%s" % (str(c["origin_id"]) + "_" + str(timedict['time_start']).split(" ")[0]))
+                            thumbnail = ("/api/images?method=generate&type=content&message=%s" % (str(chan_obj.dict["origin_id"]) + "_" + str(timedict['time_start']).split(" ")[0]))
 
                         clean_prog_dict = {
                                             "time_start": timedict['time_start'],
@@ -114,9 +113,10 @@ class OriginEPG():
                                             "seasonnumber": None,
                                             "episodenumber": None,
                                             "isnew": False,
-                                            "id": str(c["origin_id"]) + "_" + str(timedict['time_start']).split(" ")[0],
+                                            "id": str(chan_obj.dict["origin_id"]) + "_" + str(timedict['time_start']).split(" ")[0],
                                             }
-                        programguide[str(c["number"])]["listing"].append(clean_prog_dict)
+                        if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.dict["number"])]["listing"]):
+                            programguide[str(chan_obj.dict["number"])]["listing"].append(clean_prog_dict)
 
                     progindex += 1
 
@@ -127,7 +127,7 @@ class OriginEPG():
                                         "time_start": timestamp['time_start'],
                                         "time_end": timestamp['time_end'],
                                         "duration_minutes": 60,
-                                        "thumbnail": ("/api/images?method=generate&type=content&message=%s" % (str(c["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0])),
+                                        "thumbnail": ("/api/images?method=generate&type=content&message=%s" % (str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0])),
                                         "title": "Unavailable",
                                         "sub-title": "Unavailable",
                                         "description": "Unavailable",
@@ -138,10 +138,11 @@ class OriginEPG():
                                         "seasonnumber": None,
                                         "episodenumber": None,
                                         "isnew": False,
-                                        "id": str(c["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
+                                        "id": str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
                                         }
 
-                    programguide[str(c["number"])]["listing"].append(clean_prog_dict)
+                    if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.dict["number"])]["listing"]):
+                        programguide[str(chan_obj.dict["number"])]["listing"].append(clean_prog_dict)
 
         return programguide
 
