@@ -15,33 +15,18 @@ class OriginEPG():
         programguide = {}
 
         datestrings = []
-        timestamps = []
         todaydate = datetime.date.today()
         for x in range(0, 6):
             xdate = todaydate + datetime.timedelta(days=x)
-            xtdate = xdate + datetime.timedelta(days=1)
-
             datestrings.append(str(xdate))
-
-            for hour in range(0, 24):
-                time_start = datetime.datetime.combine(xdate, datetime.time(hour, 0))
-                if hour + 1 < 24:
-                    time_end = datetime.datetime.combine(xdate, datetime.time(hour + 1, 0))
-                else:
-                    time_end = datetime.datetime.combine(xtdate, datetime.time(0, 0))
-                timestampdict = {
-                                "time_start": str(time_start.strftime('%Y%m%d%H%M%S')) + " +0000",
-                                "time_end": str(time_end.strftime('%Y%m%d%H%M%S')) + " +0000",
-                                }
-                timestamps.append(timestampdict)
 
         self.remove_stale_cache(todaydate)
 
         for fhdhr_id in list(fhdhr_channels.list.keys()):
             chan_obj = fhdhr_channels.list[fhdhr_id]
 
-            if str(chan_obj.dict["number"]) not in list(programguide.keys()):
-                programguide[str(chan_obj.dict["number"])] = chan_obj.epgdict
+            if str(chan_obj.number) not in list(programguide.keys()):
+                programguide[chan_obj.number] = chan_obj.epgdict
 
             if chan_obj.dict["origin_id"] in ["est", "pst", "snick-est", "snick-pst"]:
 
@@ -115,34 +100,11 @@ class OriginEPG():
                                             "isnew": False,
                                             "id": str(chan_obj.dict["origin_id"]) + "_" + str(timedict['time_start']).split(" ")[0],
                                             }
-                        if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.dict["number"])]["listing"]):
-                            programguide[str(chan_obj.dict["number"])]["listing"].append(clean_prog_dict)
+
+                        if not any((d['time_start'] == clean_prog_dict['time_start'] and d['id'] == clean_prog_dict['id']) for d in programguide[chan_obj.number]["listing"]):
+                            programguide[chan_obj.number]["listing"].append(clean_prog_dict)
 
                     progindex += 1
-
-            else:
-
-                for timestamp in timestamps:
-                    clean_prog_dict = {
-                                        "time_start": timestamp['time_start'],
-                                        "time_end": timestamp['time_end'],
-                                        "duration_minutes": 60,
-                                        "thumbnail": ("/api/images?method=generate&type=content&message=%s" % (str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0])),
-                                        "title": "Unavailable",
-                                        "sub-title": "Unavailable",
-                                        "description": "Unavailable",
-                                        "rating": "N/A",
-                                        "episodetitle": None,
-                                        "releaseyear": None,
-                                        "genres": [],
-                                        "seasonnumber": None,
-                                        "episodenumber": None,
-                                        "isnew": False,
-                                        "id": str(chan_obj.dict["origin_id"]) + "_" + str(timestamp['time_start']).split(" ")[0],
-                                        }
-
-                    if not any(d['id'] == clean_prog_dict['id'] for d in programguide[str(chan_obj.dict["number"])]["listing"]):
-                        programguide[str(chan_obj.dict["number"])]["listing"].append(clean_prog_dict)
 
         return programguide
 
@@ -164,6 +126,8 @@ class OriginEPG():
             xmltime = datetime.datetime.strptime(xmltime, "%Y%m%d%H%M%S %z")
             xmltime = xmltime.astimezone(pytz.utc)
             xmltime = xmltime.strftime('%Y%m%d%H%M%S %z')
+        xmltime = datetime.datetime.strptime(xmltime, "%Y%m%d%H%M%S %z")
+        xmltime = xmltime.timestamp()
         return xmltime
 
     def get_prog_timedict(self, starttime, endtime, offset):
