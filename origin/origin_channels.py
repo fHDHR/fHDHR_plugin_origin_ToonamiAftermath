@@ -59,7 +59,7 @@ class OriginChannels():
 
         return channel_list
 
-    def get_channel_stream(self, chandict):
+    def get_channel_stream(self, chandict, stream_args):
         if "pst" in chandict["origin_id"]:
             streamurl = self.stream_url_base + chandict["origin_id"].replace("pst", "est")
             streamurl += "&streamDelay=180"
@@ -71,7 +71,10 @@ class OriginChannels():
         streamurl = self.fhdhr.web.session.get(streamurl).text
         if self.fhdhr.config.dict["origin"]["force_best"]:
             streamurl = self.m3u8_beststream(streamurl)
-        return streamurl
+
+        stream_info = {"url": streamurl}
+
+        return stream_info
 
     def m3u8_beststream(self, m3u8_url):
         bestStream = None
