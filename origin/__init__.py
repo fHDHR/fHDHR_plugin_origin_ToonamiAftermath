@@ -5,6 +5,9 @@ class Plugin_OBJ():
     def __init__(self, plugin_utils):
         self.plugin_utils = plugin_utils
 
+        self.tuners = self.plugin_utils.config.dict["toonamiaftermath"]["tuners"]
+        self.stream_method = self.plugin_utils.config.dict["toonamiaftermath"]["stream_method"]
+
         self.channel_json_url = "https://www.toonamiaftermath.com/tatv.json"
         self.base_api = 'http://api.toonamiaftermath.com:3000'
         self.stream_url_base = "%s/streamUrl?&channelName=" % self.base_api
