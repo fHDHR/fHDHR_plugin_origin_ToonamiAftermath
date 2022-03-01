@@ -9,14 +9,6 @@ class Plugin_OBJ():
         self.base_api = 'http://api.toonamiaftermath.com:3000'
         self.stream_url_base = "%s/streamUrl?&channelName=" % self.base_api
 
-    @property
-    def tuners(self):
-        return self.plugin_utils.config.dict["toonamiaftermath"]["tuners"]
-
-    @property
-    def stream_method(self):
-        return self.plugin_utils.config.dict["toonamiaftermath"]["stream_method"]
-
     def get_channels(self):
 
         channel_list = []
