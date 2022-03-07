@@ -10,7 +10,7 @@ class Plugin_OBJ():
 
         self.channels = channels
 
-        self.origin = plugin_utils.origin
+        self.origin_name = plugin_utils.origin_name
 
         self.base_api = 'http://api.toonamiaftermath.com:3000'
         self.media_url = "%s/media" % self.base_api
